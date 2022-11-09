@@ -21,7 +21,7 @@ beforeEach(async () => {
     
 })
 
-describe ("POST /books", () => {
+describe("POST /books", () => {
     test("Creates a book", async () => {
         const resp = await request(app)
             .post('/books')
@@ -41,11 +41,23 @@ describe ("POST /books", () => {
         expect(resp.body.book.isbn).toBe('222222222222');
     });
 
-    test("Does not create a book if title is missing", async () => {
+    test("Does not create a book if required data is missing", async () => {
         const resp = await request(app)
             .post('/books')
             .send({isbn: '33333333333'});
         expect(resp.statusCode).toBe(400);
+    })
+})
+
+describe("GET /books", () => {
+    test("Gets a list of all books", async () =>{
+        const resp = await request(app).get('/books');
+        const bookList = resp.body.books;
+        
+        expect(bookList).toHaveLength(1);
+        expect(bookList[0]).toHaveProperty('isbn');
+        expect(bookList[0]).toHaveProperty('title');
+        expect(bookList[0].isbn).toBe('111111111111');
     })
 })
 
