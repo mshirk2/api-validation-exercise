@@ -8,7 +8,7 @@ process.env.NODE_ENV = "test"
 beforeEach(async () => {
     await db.query("DELETE FROM books")
     
-    let b1 = await Book.create({
+    await Book.create({
         isbn: '111111111111',
         amazon_url: 'https://amazon.com/book',
         author: 'Myself',
@@ -60,6 +60,85 @@ describe("GET /books", () => {
         expect(bookList[0].isbn).toBe('111111111111');
     })
 })
+
+describe("GET /books/:isbn", () => {
+    test("Gets a single book", async () =>{
+        const resp = await request(app).get('/books/111111111111');
+        const respBook = resp.body.book;
+        
+        expect(respBook).toHaveProperty('isbn');
+        expect(respBook).toHaveProperty('title');
+        expect(respBook.isbn).toBe('111111111111');
+        expect(respBook.title).toBe('Book Title');
+    });
+
+    test("Responds 404 if book not found", async () => {
+        const resp = await request(app).get('/books/86486184846558');
+        expect(resp.statusCode).toBe(404);
+    });
+});
+
+describe("PUT /books/:isbn", () => {
+    test("Updates a single book", async () => {
+        const resp = await request(app)
+            .put('/books/111111111111')
+            .send({
+                isbn: 'new isbn',
+                amazon_url: 'https://amazon.com/book2',
+                author: 'Updated author',
+                language: 'French',
+                pages: 200,
+                publisher: 'Updated Publisher',
+                title: 'Updated Title',
+                year: 2050
+            });
+        const updatedBook = resp.body.book;
+
+        expect(updatedBook).toHaveProperty('isbn');
+        expect(updatedBook.title).toBe('Updated Title')
+    });
+
+    test("Does not update with bad data", async () => {
+        const resp = await request(app)
+            .put('/books/111111111111')
+            .send({
+                notAField: 'Bad data',
+                isbn: 'not executed',
+                amazon_url: 'https://amazon.com/not-executed',
+                author: 'Will Not-Execute',
+                language: 'Nonexecutish',
+                pages: 1,
+                publisher: 'This will not execute',
+                title: 'this isnt happening',
+                year: 2020
+            });
+        expect(resp.statusCode).toBe(400);
+    });
+
+    test("Responds 404 if book not found", async () => {
+        const resp = await request(app)
+            .put('/books/86486184846558')
+            .send({
+                isbn: 'not executed',
+                amazon_url: 'https://amazon.com/not-executed',
+                author: 'Will Not-Execute',
+                language: 'Nonexecutish',
+                pages: 1,
+                publisher: 'This will not execute',
+                title: 'this isnt happening',
+                year: 2020
+            });
+
+        expect(resp.statusCode).toBe(404);
+    });
+})
+
+describe("DELETE /books/:isbn", () => {
+    test("Deletes a single book", async () => {
+        const resp = await request(app).delete('/books/111111111111')
+        expect(resp.body).toEqual({message: "Book deleted"});
+    });
+});
 
 afterAll(async function () {
     await db.end()
