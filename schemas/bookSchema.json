@@ -87,5 +87,6 @@
         "publisher": "Ecco",
         "title": "The Song of Achilles: A Novel",
         "year": 2012
-    }]       
+    }],  
+    "additionalProperties": false     
 }
